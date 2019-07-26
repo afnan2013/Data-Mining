@@ -1,5 +1,5 @@
 @echo off
-set "VIRTUAL_ENV=C:\Users\mafna\PycharmProjects\Data_Mining\venv"
+set "VIRTUAL_ENV=C:\Users\mafna\PycharmProjects\Data Mining\venv"
 
 if not defined PROMPT (
     set "PROMPT=$P$G"

@@ -1,4 +1,4 @@
-#!C:\Users\mafna\PycharmProjects\Data_Mining\venv\Scripts\python.exe
+#!C:\Users\mafna\PycharmProjects\Data Mining\venv\Scripts\python.exe
 
 ##############################################################################
 #
