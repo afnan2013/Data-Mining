@@ -1,16 +1,21 @@
 from tkinter import *
+from tkinter.filedialog import *
+from PIL import ImageTk, Image
 
 root = Tk()
 
-mylabel = Label(root, text="This is very easy")
+directory_query = askopenfilename(title='Please select a QUERY image')
+print(directory_query)
+#image = cv2.imread(directory_query)
+img = ImageTk.PhotoImage(Image.open(directory_query))
+
+mylabel = Label(root, image=img)
 mylabel.pack()
 one = Label(root, text="One", fg="black", bg="white")
 one.pack(fill=X)
 two = Label(root, text="Two", fg="white", bg="black")
 two.pack(side=LEFT, fill=Y)
 
-topFrame = Frame(root)
-topFrame.pack(height=200, width=100)
 bottomFrame = Frame(root)
 bottomFrame.pack(side=BOTTOM)
 
