@@ -6,16 +6,22 @@ import xlrd
 from skimage import feature, io, color, img_as_ubyte
 from skimage.measure import shannon_entropy
 import pandas as df
+import ntpath
 
 
 def sortSecond(val):
     return val[1]
 
 
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail  # tail or ntpath.basename(head)
+
+
 def load_training_images():
     # show an "Open" dialog box and return the path to the selected file
     global directory
-    directory = askdirectory(parent=root, initialdir="/", title='Please select a directory')
+    directory = askdirectory(parent=root, initialdir=r"C:\Users\mafna\PycharmProjects\Data Mining\Lab4", title='Please select a directory')
     print(directory)
 
 
@@ -128,11 +134,12 @@ def save_SIFT_to_database():
             for i in range(len(descriptors)):  # flatten
                 for j in range(len(descriptors[0])):
                     desc.append(descriptors[i][j])
-            if len(desc) >= 40:
+            if len(desc) >= 20:
                 desc = desc[:20]
 
+            test_sheet.write(row, 0, filename)
             for i in range(len(desc)):
-                test_sheet.write(row, i, desc[i])
+                test_sheet.write(row, i+1, desc[i])
             row += 1
     print("Train Phase Ends")
 
@@ -158,11 +165,12 @@ def save_SURF_to_database():
             for i in range(len(descriptors)):  # flatten
                 for j in range(len(descriptors[0])):
                     desc.append(descriptors[i][j])
-            if len(desc) >= 40:
+            if len(desc) >= 20:
                 desc = desc[:20]
 
+            test_sheet.write(row, 0, filename)
             for i in range(len(desc)):
-                test_sheet.write(row, i, desc[i])
+                test_sheet.write(row, i+1, desc[i])
             row += 1
     print("Train Phase Ends")
 
@@ -180,7 +188,7 @@ def load_training_feature_data():
 def load_test_images():
     # show an "Open" dialog box and return the path to the selected file
     global test_directory
-    test_directory = askdirectory(parent=root, initialdir="/", title='Please select a Query directory')
+    test_directory = askdirectory(parent=root, initialdir=r"C:\Users\mafna\PycharmProjects\Data Mining\Lab4", title='Please select a Query directory')
     print(test_directory)
 
 
@@ -230,6 +238,7 @@ def save_CT_DD_Test_to_database():
     cv2.destroyAllWindows()
     test_book.close()
 
+
 def save_GLCM_Test_to_database():
     row = 2
     test_book = xlsxwriter.Workbook('GLCM Test Results.xlsx')
@@ -273,24 +282,92 @@ def save_GLCM_Test_to_database():
     test_book.close()
 
 
+def save_SIFT_Test_to_database():
+    row = 2
+    test_book = xlsxwriter.Workbook('SIFT Test Results.xlsx')
+    test_sheet = test_book.add_worksheet()
+    for filename in os.listdir(test_directory):
+        if filename.endswith(".png"):
+            print(filename)
+            image = cv2.imread(test_directory + "/" + filename)
+            # We use cvtColor, to convert to grayscale
+            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            cv2.imshow("gray image", gray_image)
+            cv2.waitKey(1)
+            sift = cv2.xfeatures2d.SIFT_create()
+            keypoints, descriptors = sift.detectAndCompute(gray_image, None)
+            desc = []
+            for i in range(len(descriptors)):  # flatten
+                for j in range(len(descriptors[0])):
+                    desc.append(descriptors[i][j])
+            if len(desc) >= 20:
+                desc = desc[:20]
+
+            test_sheet.write(row, 0, filename)
+            for i in range(len(desc)):
+                test_sheet.write(row, i+1, desc[i])
+            row += 1
+    print("Test Feature Extraction Ends")
+
+    cv2.destroyAllWindows()
+    test_book.close()
+
+
+def save_SURF_Test_to_database():
+    row = 2
+    test_book = xlsxwriter.Workbook('SURF Test Results.xlsx')
+    test_sheet = test_book.add_worksheet()
+    for filename in os.listdir(test_directory):
+        if filename.endswith(".png"):
+            print(filename)
+            image = cv2.imread(test_directory + "/" + filename)
+            # We use cvtColor, to convert to grayscale
+            gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            cv2.imshow("gray image", gray_image)
+            cv2.waitKey(1)
+            surf = cv2.xfeatures2d.SURF_create()
+            keypoints, descriptors = surf.detectAndCompute(gray_image, None)
+            desc = []
+            for i in range(len(descriptors)):  # flatten
+                for j in range(len(descriptors[0])):
+                    desc.append(descriptors[i][j])
+            if len(desc) >= 40:
+                desc = desc[:20]
+
+            test_sheet.write(row, 0, filename)
+            for i in range(len(desc)):
+                test_sheet.write(row, i+1, desc[i])
+            row += 1
+    print("Test Feature Extraction Ends")
+
+    cv2.destroyAllWindows()
+    test_book.close()
+
+
 def load_test_feature_data():
     # show an "Open" dialog box and return the path to the selected file
     global directory_test_feature
     directory_test_feature = askopenfilename(title='Please select a Test feature file')
     print(directory_test_feature)
+    global results_filename
+    results_filename = "Prediction "+path_leaf(directory_test_feature)
 
 
 def display_similar_images_by_city_block_distance():
     print(directory_test_feature)
     print(directory)
+
+    results_prediction_book = xlsxwriter.Workbook("UsingCityBlock "+results_filename)
+    results_predition_sheet = results_prediction_book.add_worksheet()
+    results_predition_sheet.write(1, 0, "Actual Image Name")
+    results_predition_sheet.write(1, 1, "Predicted Image Name")
+
     book = xlrd.open_workbook(directory_feature)
     sheet = book.sheet_by_index(0)
 
     book1 = xlrd.open_workbook(directory_test_feature)
     sheet1 = book1.sheet_by_index(0)
 
-    test_book = xlsxwriter.Workbook('Predition Results CB.xlsx')
-    test_sheet = test_book.add_worksheet()
     test_row = 2
     for k in range(sheet1.nrows-2):
         fittness = []
@@ -309,13 +386,23 @@ def display_similar_images_by_city_block_distance():
         index = fittness[0][0]
         testFile = sheet1.cell_value(test_row, 0)
         predictedFile = sheet.cell_value(index, 0)
+
+        results_predition_sheet.write(test_row, 0, testFile)
+        results_predition_sheet.write(test_row, 1, predictedFile)
         print(testFile,"  ", predictedFile)
         test_row = test_row + 1
+    results_prediction_book.close()
 
 
 def display_similar_images_by_canberra_distance():
     print(directory_test_feature)
     print(directory)
+
+    results_prediction_book = xlsxwriter.Workbook("UsingCanberra " + results_filename)
+    results_predition_sheet = results_prediction_book.add_worksheet()
+    results_predition_sheet.write(1, 0, "Actual Image Name")
+    results_predition_sheet.write(1, 1, "Predicted Image Name")
+
     book = xlrd.open_workbook(directory_feature)
     sheet = book.sheet_by_index(0)
 
@@ -331,7 +418,10 @@ def display_similar_images_by_canberra_distance():
         for i in range(sheet.nrows - 2):
             sum = 0
             for j in range(1, sheet.ncols):
-                sum += abs(float(sheet1.cell_value(test_row, j) - sheet.cell_value(loop, j))) / (float(sheet1.cell_value(test_row, j) + sheet.cell_value(loop, j)))
+                if float(sheet1.cell_value(test_row, j) + sheet.cell_value(loop, j)) != 0:
+                    sum += abs(float(sheet1.cell_value(test_row, j) - sheet.cell_value(loop, j))) / (float(sheet1.cell_value(test_row, j) + sheet.cell_value(loop, j)))
+                else:
+                    sum += abs(float(sheet1.cell_value(test_row, j) - sheet.cell_value(loop, j)))
             row = [loop, sum]
             fittness.append(row)
             loop = loop + 1
@@ -345,9 +435,12 @@ def display_similar_images_by_canberra_distance():
         print(testFile, "  ", predictedFile)
         test_row = test_row + 1
 
+    results_prediction_book.close()
+
 
 def display_similar_images_by_random_forest():
     print()
+
 
 root = Tk() # we don't want a full GUI, so keep the root window from appearing
 root.winfo_toplevel().title("Image Recognition Using City Block Distance and Features : Five Number Summery and Variance")
@@ -367,8 +460,8 @@ button7 = Button(bottomFrame, text="Load Test Images\n(Browse Query Image Folder
 
 button8 = Button(bottomFrame, text="Extract CT+DD Feature\n for query images and store", width=25, fg="white", bg="blue", command=save_CT_DD_Test_to_database)
 button9 = Button(bottomFrame, text="Extract GLCM Feature \nfor query images and store", width=25, fg="white", bg="red", command=save_GLCM_Test_to_database)
-button10 = Button(bottomFrame, text="Extract SIFT Feature \nfor query images and store", width=25, fg="white", bg="red", command=save_SIFT_to_database)
-button11 = Button(bottomFrame, text="Extract SURF Feature \nfor query images and store", width=25, fg="white", bg="red", command=save_SURF_to_database)
+button10 = Button(bottomFrame, text="Extract SIFT Feature \nfor query images and store", width=25, fg="white", bg="red", command=save_SIFT_Test_to_database)
+button11 = Button(bottomFrame, text="Extract SURF Feature \nfor query images and store", width=25, fg="white", bg="red", command=save_SURF_Test_to_database)
 button12 = Button(bottomFrame, text="Load Test Feature Data \n(Browse Query feature file)", width=25, fg="white", bg="red", command=load_test_feature_data)
 
 button13 = Button(bottomFrame, text="Show similar images using\n City block distance(in excel sheet)", fg="white", bg="brown", command=display_similar_images_by_city_block_distance)
@@ -391,6 +484,5 @@ button12.grid(row=4, column=2)
 button13.grid(row=0, column=3)
 button14.grid(row=1, column=3)
 button15.grid(row=2, column=3)
-
 
 root.mainloop()
