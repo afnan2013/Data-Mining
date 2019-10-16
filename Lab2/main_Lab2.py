@@ -28,7 +28,7 @@ def load_images():
     print(directory)
 
 
-def save_to_database():
+def save_CT_DD_to_database():
     row = 2
     test_book = xlsxwriter.Workbook('Train Results.xlsx')
     test_sheet = test_book.add_worksheet()
@@ -136,7 +136,8 @@ def display_similar_images():
         q3 = abs(float(quartiles[2] - sheet.cell_value(loop, 8)))
         maxi = abs(float(maximum - sheet.cell_value(loop, 9)))
         s = v + mini + q1 + q2 + q3 + maxi
-        row = [i, s]
+        m = max(v, mini, q1, q2, q3, maxi)
+        row = [loop, m]
         fittness.append(row)
         loop = loop + 1
         print(v)
@@ -146,9 +147,10 @@ def display_similar_images():
     result_label = Label(topFrame, text="Similar Images")
     result_label.pack()
 
+    # to show the images number  in sorting order 10
     l = 10
     for i in range(l):
-        nestedRow = fittness[0]
+        nestedRow = fittness[i]
         index = nestedRow[0]
         imageFile = sheet.cell_value(index-1, 0)
 
@@ -166,7 +168,7 @@ query_label.pack()
 query_image.pack()
 
 button1 = Button(bottomFrame, text="Load Training images\n(Browse Training image folder)", width=25, fg="white", bg="blue", command=load_images)
-button2 = Button(bottomFrame, text="Extract Feature and\n store in database", width=25, fg="white", bg="red", command=save_to_database)
+button2 = Button(bottomFrame, text="Extract CT+DD Feature\n and store in database", width=25, fg="white", bg="red", command=save_CT_DD_to_database)
 button3 = Button(bottomFrame, text="Load Feature Data\n(Browse Training feature Data file)", width=25, fg="white", bg="green", command=load_feature_data)
 button4 = Button(bottomFrame, text="Load Query image\n(Browse Test image)", fg="black", bg="aqua", command=select_query_image)
 button5 = Button(bottomFrame, text="Display (Extract query image \n feature and show the similar images)", fg="white", bg="brown", command=display_similar_images)
