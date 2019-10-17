@@ -6,6 +6,7 @@ import xlrd
 from skimage import feature, io, color, img_as_ubyte
 from skimage.measure import shannon_entropy
 import pandas as df
+from sklearn.ensemble import RandomForestClassifier
 import ntpath
 
 
@@ -386,7 +387,6 @@ def display_similar_images_by_city_block_distance():
         index = fittness[0][0]
         testFile = sheet1.cell_value(test_row, 0)
         predictedFile = sheet.cell_value(index, 0)
-
         results_predition_sheet.write(test_row, 0, testFile)
         results_predition_sheet.write(test_row, 1, predictedFile)
         print(testFile,"  ", predictedFile)
@@ -409,8 +409,6 @@ def display_similar_images_by_canberra_distance():
     book1 = xlrd.open_workbook(directory_test_feature)
     sheet1 = book1.sheet_by_index(0)
 
-    test_book = xlsxwriter.Workbook('Predition Results Can.xlsx')
-    test_sheet = test_book.add_worksheet()
     test_row = 2
     for k in range(sheet1.nrows - 2):
         fittness = []
@@ -432,6 +430,8 @@ def display_similar_images_by_canberra_distance():
         index = fittness[0][0]
         testFile = sheet1.cell_value(test_row, 0)
         predictedFile = sheet.cell_value(index, 0)
+        results_predition_sheet.write(test_row, 0, testFile)
+        results_predition_sheet.write(test_row, 1, predictedFile)
         print(testFile, "  ", predictedFile)
         test_row = test_row + 1
 
@@ -439,10 +439,34 @@ def display_similar_images_by_canberra_distance():
 
 
 def display_similar_images_by_random_forest():
-    print()
+    print(directory_test_feature)
+    print(directory)
+
+    results_prediction_book = xlsxwriter.Workbook("UsingRandomForest " + results_filename)
+    results_predition_sheet = results_prediction_book.add_worksheet()
+    results_predition_sheet.write(1, 0, "Actual Image Name")
+    results_predition_sheet.write(1, 1, "Predicted Image Name")
+
+    dtest = df.read_excel(directory_test_feature, sheet_name='Sheet1')
+    dtrain = df.read_excel(directory_feature, sheet_name='Sheet1')
+
+    x_train = dtrain.iloc[1:, 1:].values
+    x_class = dtrain.iloc[1:, 0].values
+    y_test = dtest.iloc[1:, 1:].values
+    y_class = dtest.iloc[1:, 0].values
+
+    classification = RandomForestClassifier(n_estimators=20)
+    classification.fit(x_train, x_class)
+    y_predict = classification.predict(y_test)
+
+    for i in range(len(y_class)):
+        results_predition_sheet.write(i+1, 0, y_class[i])
+        results_predition_sheet.write(i+1, 1, y_predict[i])
+        print("Actual = ", y_class[i], "  Predicted = ", y_predict[i])
+    results_prediction_book.close()
 
 
-root = Tk() # we don't want a full GUI, so keep the root window from appearing
+root = Tk()  # we don't want a full GUI, so keep the root window from appearing
 root.winfo_toplevel().title("Image Recognition Using City Block Distance and Features : Five Number Summery and Variance")
 
 bottomFrame = Frame(root, borderwidth=5)
